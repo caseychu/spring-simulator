@@ -108,14 +108,36 @@ window.onload = function () {
 			graph.points.shift();
 	};
 	
+	// Lorentzian
+	var LORENTZIAN_MAX = 13;
+	var LORENTZIAN_WIDTH = 200;
+	var LORENTZIAN_HEIGHT = 200;
+	var lorentzian = new Renderer(document.getElementById('lorentzian'), LORENTZIAN_WIDTH, LORENTZIAN_HEIGHT, function (m, b, k, omegaf) {
+		var amplitudeVsOmega = function (omega) { return 1 / sqrt(sq(k / m - sq(omega)) + sq(omega * b / m)); };
+		
+		// Draw a line at current omega
+		this.strokeStyle = '#ccc';
+		this.lineWidth = 1;
+		this.beginPath();
+		this.moveTo(omegaf * LORENTZIAN_WIDTH / LORENTZIAN_MAX, 0);
+		this.lineTo(omegaf * LORENTZIAN_WIDTH / LORENTZIAN_MAX, LORENTZIAN_HEIGHT);
+		this.stroke();
+		
+		// Draw curve
+		this.strokeStyle = 'violet';
+		this.beginPath();
+		for (var o = 0; o < LORENTZIAN_MAX; o += 0.1)
+			this.lineTo(o * LORENTZIAN_WIDTH / LORENTZIAN_MAX, LORENTZIAN_HEIGHT * (1 - amplitudeVsOmega(o)));
+		this.stroke();
+		
+	});
+	lorentzian.canvas.style.borderLeft = lorentzian.canvas.style.borderBottom = '1px solid #ccc';
+	
 	var y = 500; // pixels
 	var v = 0; // pixels / second
 	var t0 = 0;
 	
-	// Modify our constants
-	var m, k, b, f0;
-	var f = function (t) { return f0; }; // mass * pixels / second^2
-	
+	// Modify our constants	
 	var zeta = control('zeta', id, id, id);
 	var omega0 = control('omega0', id, id, id);
 	var omega1 = control('omega1', id, id, id);
@@ -126,12 +148,25 @@ window.onload = function () {
 		var o1 = omega1(sqrt(k / m - sq(b / m / 2)) || "?");
 		T(typeof o1 == 'number' ? 2 * PI / o1 : "?");
 		zeta(b / m / o0 / 2);
+		lorentzian.render(m, b, k, omegaf);
 	}
 	
+	var m, k, b, f0, omegaf;
 	control('m', id, id, function (m_) { m = m_; output(); });
 	control('b', exp0, log, function (b_) { b = b_; output(); });
 	control('k', exp, log, function (k_) { k = k_; output(); });
-	control('f', id, id, function (f_) { f0 = f_; });
+	var ff = control('f', id, id, function (f_) { f0 = f_; });
+	var omegaff = control('omegaf', id, id, function (omegaf_) { omegaf = omegaf_; output(); });
+	
+	// Forcing
+	var f = function (t) {
+		return ff(f0 * cos(omegaf * t / 1000));
+	}; // mass * pixels / second^2
+	document.getElementById('f-reset').onclick = function () {
+		f0 = ff(0);
+		omegaf = omegaff(0);
+		output();
+	};
 	
 	requestAnimationFrame(function step(t) {
 		// The user left the page for a while... pick up where they left off.
@@ -155,7 +190,7 @@ window.onload = function () {
 		requestAnimationFrame(step);
 	});
 	
-	
+	// Dragging the block
 	var dragging = false;
 	var grabberY, lastY, lastT;
 	spring.canvas.onmousedown = function (e) {
