@@ -39,7 +39,6 @@ window.onload = function () {
 	var spring = new Renderer(document.getElementById('spring'), WIDTH, HEIGHT, function (n, height) {
 		this.drawImage(graph.canvas, 0, 0);
 		
-		this.globalAlpha = 0.8;
 		this.lineWidth = 5;
 		this.beginPath();
 		this.moveTo(STRING_POS, 0);
@@ -51,7 +50,7 @@ window.onload = function () {
 		var omega = 2 * PI / (height / n);
 		this.beginPath();
 		this.moveTo(STRING_POS, 0);
-		for (var t = 0; t < height; t += 0.01)
+		for (var t = 0; t < height && t < 2 * HEIGHT; t += 0.02)
 			this.lineTo(STRING_POS + SPRING_WIDTH * sin(omega * t), t + SPRING_BUFFER_HEIGHT);
 			
 		height += SPRING_BUFFER_HEIGHT * 2;
@@ -59,6 +58,7 @@ window.onload = function () {
 		this.stroke();
 		
 		// Draw the block
+		this.globalAlpha = 0.8;
 		this.fillStyle = 'yellow';
 		this.beginPath();
 		this.rect(STRING_POS - BLOCK_WIDTH / 2, height, BLOCK_WIDTH, BLOCK_HEIGHT);
@@ -106,39 +106,56 @@ window.onload = function () {
 	
 	var id = function (x) { return x; };
 	control('m', id, function (m_) { m = m_; });
-	control('b', id, function (b_) { b = b_; });
+	control('b', function (x) { return x < -4.5 ? 0 : Math.exp(x); }, function (b_) { b = b_; });
 	control('k', Math.exp, function (k_) { k = k_; });
 	
 	requestAnimationFrame(function step(t) {
+		// The user left the page for a while... pick up where they left off.
+		if (t - t0 > 1000)
+			t0 = t;
+	
+		// Numerically integrate
+		if (!dragging) {
+			var dt = (t - t0) / 1000;
+			y += v * dt;
+			v += (-b * v - k * (y - SPRING_EQUIL_Y) - f(t)) * dt / m;
+		}
+		
 		graph.push(t, y);
 		graph.render(t);
 		
-		// Spring constant is proportional to number of coils cubed
+		// Spring constant is proportional to number of coils squared... why not?
 		spring.render(Math.round(Math.pow(k, 1 / 2)), y);
 		
-		// Numerically integrate
-		var dt = (t - t0) / 1000;
-		y += v * dt;
-		v += (-b * v - k * (y - SPRING_EQUIL_Y) - f(t)) * dt / m;
-		
 		t0 = t;
-		
-		// Uh, we broke something.
-		if (Math.abs(y) > HEIGHT * 10 || Math.abs(v) > HEIGHT * 10) {
-			y = 500;
-			v = 0;
-			graph.points = [];
-			
-			spring.context.fillStyle = 'red';
-			spring.context.rect(0, 0, WIDTH, HEIGHT);
-			spring.context.fill();
-			
-			setTimeout(step, 3000);
-			return;
-		}
-		
 		requestAnimationFrame(step);
 	});
 	
 	
+	var dragging = false;
+	var grabberY, lastY, lastT;
+	spring.canvas.onmousedown = function (e) {
+		var mx = e.x - this.offsetLeft;
+		var my = e.y - this.offsetTop;
+		var bx = mx - STRING_POS;
+		if (Math.abs(bx) <= BLOCK_WIDTH / 2) {
+			dragging = true;			
+			lastY = y;
+			lastT = Date.now();
+			grabberY = my - y;
+			v = 0;
+		}
+	};
+	spring.canvas.onmousemove = function (e) {
+		if (dragging) {
+			var t = Date.now();
+			var my = e.y - this.offsetTop;
+			y = my - grabberY;
+			v = (lastY - y) / (lastT - t);
+			lastT = t;
+		}
+	};
+	spring.canvas.onmouseup = function (e) {
+		dragging = false;
+	};
 };
