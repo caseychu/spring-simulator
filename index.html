@@ -9,6 +9,7 @@
 			
 			#controls {
 				float: right;
+				font-size: 1.5em;
 			}
 		</style>
 	</head>
@@ -19,7 +20,17 @@
 			mx'' + bx' + kx = f(t) <br /> 
 			<div id="m"><input type="range" step="0.001" min="1" max="5" value="1" /> m = <span></span> kg</div>
 			<div id="b"><input type="range" step="0.001" min="-5" max="3" value="-1.38629" /> b = <span></span> kg/s</div>
-			<div id="k"><input type="range" step="0.001" min="1" max="5" value="4" /> k = <span></span> kg/s<sup>2</sup></div>
+			<div id="k"><input type="range" step="0.001" min="1" max="5" value="3.912" /> k = <span></span> kg/s<sup>2</sup></div>
+			
+			<br />
+			x'' + 2&zeta;&omega;<sub>0</sub>x' + &omega;<sub>0</sub><sup>2</sup>x = f(t)/m <br /> 
+			<div id="zeta"><input type="range" step="0.001" min="0" max="2" disabled /> &zeta; = <span></span></div>
+			<div id="omega0"><input type="range" step="0.001" min="0" max="13" disabled /> &omega;<sub>0</sub> = <span></span> s<sup>-1</sup></div>
+			<div id="omega1"><input type="range" step="0.001" min="0" max="13" disabled /> &omega;<sub>1</sub> = <span></span> s<sup>-1</sup></div>
+			<div id="T"><input type="range" step="0.001" min="0" max="8" disabled /> T = <span></span> s</div>
+			
+			<br />
+			<div id="f"><input type="range" style="width: 20px; height: 300px; -webkit-appearance: slider-vertical;" step="0.01" min="-5000" max="5000" value="0" /> F = <span></span> kg px/s<sup>2</sup></div>
 		</div>
 		
 		<script src="spring.js" type="text/javascript"></script>

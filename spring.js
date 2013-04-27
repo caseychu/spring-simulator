@@ -10,7 +10,7 @@ function Renderer(canvas, width, height, render) {
 	};
 }
 
-function control(id, value, callback) {
+function control(id, value, inv, callback) {
 	var control = document.getElementById(id).querySelector('input');
 	var val = document.getElementById(id).querySelector('span');
 
@@ -19,9 +19,21 @@ function control(id, value, callback) {
 		callback(value(+this.value));
 	};
 	control.onchange();
+	
+	return function (n) {
+		val.innerHTML = n.toFixed ? n.toFixed(2) : n;
+		control.value = inv(n);
+		return n;
+	};
 }
 
 window.onload = function () {
+	var sqrt = Math.sqrt;
+	var exp = Math.exp;
+	var log = Math.log;
+	var exp0 = function (x) { return x < -4.5 ? 0 : exp(x); };
+	var id = function (x) { return x; };
+	var sq = function (x) { return x * x; };
 	var sin = Math.sin;
 	var cos = Math.cos;
 	var PI = Math.PI;
@@ -101,13 +113,25 @@ window.onload = function () {
 	var t0 = 0;
 	
 	// Modify our constants
-	var m, k, b;
-	var f = function (t) { return 0; }; // mass * pixels / second^2
+	var m, k, b, f0;
+	var f = function (t) { return f0; }; // mass * pixels / second^2
 	
-	var id = function (x) { return x; };
-	control('m', id, function (m_) { m = m_; });
-	control('b', function (x) { return x < -4.5 ? 0 : Math.exp(x); }, function (b_) { b = b_; });
-	control('k', Math.exp, function (k_) { k = k_; });
+	var zeta = control('zeta', id, id, id);
+	var omega0 = control('omega0', id, id, id);
+	var omega1 = control('omega1', id, id, id);
+	var T = control('T', id, id, id);
+	
+	function output() {
+		var o0 = omega0(sqrt(k / m));
+		var o1 = omega1(sqrt(k / m - sq(b / m / 2)) || "?");
+		T(typeof o1 == 'number' ? 2 * PI / o1 : "?");
+		zeta(b / m / o0 / 2);
+	}
+	
+	control('m', id, id, function (m_) { m = m_; output(); });
+	control('b', exp0, log, function (b_) { b = b_; output(); });
+	control('k', exp, log, function (k_) { k = k_; output(); });
+	control('f', id, id, function (f_) { f0 = f_; });
 	
 	requestAnimationFrame(function step(t) {
 		// The user left the page for a while... pick up where they left off.
@@ -141,17 +165,17 @@ window.onload = function () {
 		if (Math.abs(bx) <= BLOCK_WIDTH / 2) {
 			dragging = true;			
 			lastY = y;
-			lastT = Date.now();
+			lastT = Date.now() / 1000;
 			grabberY = my - y;
 			v = 0;
 		}
 	};
 	spring.canvas.onmousemove = function (e) {
 		if (dragging) {
-			var t = Date.now();
+			var t = Date.now() / 1000;
 			var my = e.y - this.offsetTop;
 			y = my - grabberY;
-			v = (lastY - y) / (lastT - t);
+			v = 0.05 * (lastY - y) / (lastT - t);
 			lastT = t;
 		}
 	};
