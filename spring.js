@@ -8,6 +8,10 @@ function Renderer(canvas, width, height, render) {
 		context.clearRect(0, 0, width, height);
 		render.apply(context, arguments);
 	};
+	this.setDimensions = function (w, h) {
+		canvas.width = width = w;
+		canvas.height = height = h;
+	};
 }
 
 function control(id, value, inv, callback) {
@@ -38,10 +42,10 @@ window.onload = function () {
 	var cos = Math.cos;
 	var PI = Math.PI;
 	
-	var WIDTH = 900;
-	var HEIGHT = 700;
+	var WIDTH = window.innerWidth;
+	var HEIGHT = window.innerHeight;
 	var SPRING_WIDTH = 80;
-	var STRING_POS = WIDTH * 4 / 5;
+	var STRING_POS = WIDTH / 2;
 	var BLOCK_WIDTH = 220;
 	var BLOCK_HEIGHT = 150;
 	var SPRING_BUFFER_HEIGHT = 25;
@@ -50,8 +54,14 @@ window.onload = function () {
 	var TICK_HEIGHT = 15;
 	var PIXELS_PER_MS = WIDTH / GRAPH_PERIOD;
 	var LORENTZIAN_MAX = 13;
-	var LORENTZIAN_WIDTH = 200;
-	var LORENTZIAN_HEIGHT = 200;
+	var LORENTZIAN_WIDTH = document.querySelector('input').offsetWidth - 10;
+	var LORENTZIAN_HEIGHT = 80;
+	
+	window.onresize = function () {
+		HEIGHT = window.innerHeight;
+		spring.setDimensions(WIDTH, HEIGHT);
+		graph.setDimensions(WIDTH, HEIGHT);
+	};
 
 	var spring = new Renderer(document.getElementById('spring'), WIDTH, HEIGHT, function (n, height) {
 		this.drawImage(graph.canvas, 0, 0);
@@ -141,7 +151,6 @@ window.onload = function () {
 		this.stroke();
 		
 	});
-	lorentzian.canvas.style.borderLeft = lorentzian.canvas.style.borderBottom = '1px solid #ccc';
 	
 	var y = 500; // pixels
 	var v = 0; // pixels / second
@@ -173,10 +182,28 @@ window.onload = function () {
 		return ff(f0 * cos(omegaf * t / 1000));
 	}; // mass * pixels / second^2
 	document.getElementById('f-reset').onclick = function () {
+		document.getElementById('f-oscillation').innerHTML = 'turn oscillation on';
+		document.getElementById('controls').classList.remove('f-oscillating');
+		
 		f0 = ff(0);
 		omegaf = omegaff(0);
 		output();
+		return false;
 	};
+	document.getElementById('f-oscillation').onclick = function () {
+		document.getElementById('controls').classList.toggle('f-oscillating');
+		if (document.getElementById('controls').classList.contains('f-oscillating')) {
+			this.innerHTML = 'turn oscillation off';
+			
+			// Sensible default values
+			f0 = ff(5000);
+			omegaf = omegaff(LORENTZIAN_MAX / 2);
+			output();
+		} else
+			document.getElementById('f-reset').onclick();
+		return false;
+	};
+	
 	
 	requestAnimationFrame(function step(time) {
 		
@@ -194,7 +221,6 @@ window.onload = function () {
 			t = t1;
 			dt = 0;
 		}
-		
 	
 		// Numerically integrate
 		if (!dragging) {

@@ -1,45 +1,187 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Mass-Spring System</title>
+		<title>Spring Simulator</title>
 		<style type="text/css">
+			html, body {
+				padding: 0;
+				margin: 0;
+				
+				font-family: serif;
+				font-size: 17px;
+				overflow-y: scroll;
+			}
 			#spring {
-				border: 1px solid black;
+				position: fixed;
+				z-index: -1;
 			}
 			
 			#controls {
-				float: right;
-				font-size: 1.5em;
-				width: 400px;
+				border: 1px solid black;
+				background-color: white;
+				padding: 1em;
+				margin: 1em;
+				width: 450px;
+				position: absolute;
+				right: 0;
+				
+				-webkit-box-shadow: 2px 2px 15px 0px rgba(0, 0, 0, .3);
+				box-shadow: 2px 2px 15px 0px rgba(0, 0, 0, .3);
+			}
+			.explanation {
+				font-size: 13px;
+			}
+			fieldset {
+				margin: 0.5em 0 2em;
+			}
+			fieldset:last-child {
+				margin-bottom: 0;
+			}
+			td {
+				padding: 4px 4px 4px 12px;
+			}
+			td:first-child {
+				text-align: center;
+				padding: 0;
+				width: 5px; /* as small as possible */
+			}
+			sup, sub {
+				font-size: 0.7em;
+			}
+			.hanging {
+				display: inline-block;
+				vertical-align: text-top
+			}
+			#controls #omegaf, #controls #f-oscillating-function {
+				display: none;
+			}
+			#controls.f-oscillating #omegaf {
+				display: table-row;
+			}
+			#controls.f-oscillating #f-oscillating-function {
+				display: block;
+			}
+			#controls.f-oscillating #f .hanging {
+				vertical-align: top;
 			}
 		</style>
+		
+	<link href='http://fonts.googleapis.com/css?family=Noto+Serif' rel='stylesheet' type='text/css'>
 	</head>
 	<body>
-		<canvas id="spring"></canvas>
 		
 		<div id="controls">
-			mx'' + bx' + kx = f(t) <br /> 
-			<div id="m"><input type="range" step="0.001" min="1" max="5" value="1" /> m = <span></span> kg</div>
-			<div id="b"><input type="range" step="0.001" min="-5" max="3" value="-1.38629" /> b = <span></span> kg/s</div>
-			<div id="k"><input type="range" step="0.001" min="1" max="5" value="3.912" /> k = <span></span> kg/s<sup>2</sup></div>
+			This mass-spring system is governed by the differential equation:
+			<fieldset>
+				<legend><var>mx&prime;&prime;</var> + <var>bx&prime;</var> + <var>kx</var> = <var>f</var>(<var>t</var>)</legend>
+				<table>
+					<tr id="m">
+						<td><input type="range" step="0.001" min="1" max="5" value="1" /></td>
+						<td>
+							<var>m</var> = <span></span> kg 
+							<div class="explanation"><b>mass</b>: resistance to force</div>
+						</td>
+					</tr>
+					
+					<tr id="b">
+						<td><input type="range" step="0.001" min="-5" max="3" value="-1.38629" /></Td>
+						<td>
+							<var>b</var> = <span></span> kg/s 
+							<div class="explanation"><b>damping coefficient</b>: resistance to movement</div>
+						</td>
+					</tr>
+					
+					<tr id="k">
+						<td><input type="range" step="0.001" min="1" max="5" value="3.912" /></td>
+						<td>
+							<var>k</var> = <span></span> kg/s<sup>2</sup>
+							<div class="explanation"><b>spring constant</b>: stiffness of spring</div>
+						</td>
+					</tr>
+					
+					<tr id="f">
+						<td>
+							<input type="range" style="width: 20px; height: 100px; -webkit-appearance: slider-vertical" step="0.01" min="-5000" max="5000" value="0" />
+						</td>
+						<td>
+							<div style="line-height: 0.7em; padding-bottom: 0.3em">
+								<var>f</var>(<var>t</var>)
+								<div class="hanging">
+									<div id="f-oscillating-function">= <var>F</var><sub>0</sub> cos <var>&omega;</var><var>t</var></div>
+									<div>= <span></span> kg px/s<sup>2</sup></div>
+								</div>
+							</div>
+							<div class="explanation">
+								<b>forcing function</b>: external force on block <br />
+								<a href="#1" id="f-reset">reset <var>f</var>(<var>t</var>) = 0</a> | 
+								<a href="#1" id="f-oscillation">turn oscillation on</a>
+							</div>
+						</td>
+					</tr>
+					
+					
+					<tr id="omegaf">
+						<td>
+							<canvas id="lorentzian"></canvas>
+							<input type="range" step="0.001" min="0" max="13" value="0" />
+						</td>
+						<td>
+							<var>&omega;</var> = <span></span> s<sup>&#8722;1</sup>
+							<div class="explanation">
+								<b>angular frequency of forcing function</b>: <var>&omega;</var> = 0 for no oscillation
+							</div>
+						</td>
+				</table>
+			</fieldset>
 			
-			<br />
-			x'' + 2&zeta;&omega;<sub>0</sub>x' + &omega;<sub>0</sub><sup>2</sup>x = f(t)/m <br /> 
-			<div id="zeta"><input type="range" step="0.001" min="0" max="2" disabled /> &zeta; = <span></span></div>
-			<div id="omega0"><input type="range" step="0.001" min="0" max="13" disabled /> &omega;<sub>0</sub> = <span></span> s<sup>-1</sup></div>
-			<div id="omega1"><input type="range" step="0.001" min="0" max="13" disabled /> &omega;<sub>1</sub> = <span></span> s<sup>-1</sup></div>
-			<div id="T"><input type="range" step="0.001" min="0" max="8" disabled /> T = <span></span> s</div>
-			
-			<br />
-			<div id="f">
-				<input type="range" style="width: 20px; height: 200px; -webkit-appearance: slider-vertical; float: left; margin-right: 2em;" step="0.01" min="-5000" max="5000" value="0" /> 
-					f(t) = F<sub>0</sub> cos &omega;<sub>f</sub>t <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = <span></span> kg px/s<sup>2</sup><br />
-					<div id="omegaf"><input type="range" step="0.001" min="0" max="13" value="0" /> &omega;<sub>f</sub> = <span></span> s<sup>-1</sup></div>
-					<button id="f-reset">reset f(t) = 0</button> <br />
-					<canvas id="lorentzian"></canvas>
-			</div>
+			We can rewrite the differential equation, dividing both sides by <var>m</var>:		
+			<fieldset>
+				<legend><var>x</var>&prime;&prime; + 2<var>&zeta;&omega;</var><sub>0</sub><var>x</var>&prime; + <var>&omega;</var><sub>0</sub><sup>2</sup><var>x</var> = <var>f</var>(<var>t</var>)&#8202;/&#8202;<var>m</var></legend> 
+				
+				<table>
+					
+					<tr id="zeta">
+						<td><input type="range" step="0.001" min="0" max="2" disabled /></td>
+						<td>
+							<var>&zeta;</var> = <span></span>
+							<div class="explanation"><b>damping ratio</b>: 
+								<div class="hanging">
+									system is underdamped if 0 &gt; <var>&zeta;</var> &gt; 1<br />
+									system is critically damped if <var>&zeta;</var> = 1<br />
+									system is overdamped if <var>&zeta;</var> &gt; 1<br />
+								</div>
+							</div>
+						</td>
+					</tr>
+					
+					<tr id="T">
+						<td><input type="range" step="0.001" min="0" max="8" disabled /></td>
+						<td>
+							<var>T</var> = <span></span> s
+							<div class="explanation"><b>period of motion</b> (<var>T</var> = 2&pi;&#8202;/&#8202;<var>&omega;</var><sub>1</sub>)</div>
+						</td>
+					</tr>
+					
+					<tr id="omega0">
+						<td><input type="range" step="0.001" min="0" max="13" disabled /></Td>
+						<td>
+							<var>&omega;</var><sub>0</sub> = <span></span> s<sup>&#8722;1</sup>
+							<div class="explanation"><b>natural angular frequency</b> (for undamped, <var>b</var> = 0)</div>
+						</td>
+					</tr>
+					
+					<tr id="omega1">
+						<td><input type="range" step="0.001" min="0" max="13" disabled /></td>
+						<td>
+							<var>&omega;</var><sub>1</sub> = <span></span> s<sup>&#8722;1</sup>
+							<div class="explanation"><b>actual angular frequency</b> (<var>&omega;</var><sub>0</sub> &approx; <var>&omega;</var><sub>1</sub> for <var>&zeta;</var> &ll; 1)</div>
+						</td>
+					</tr>
+				</table>
+			</fieldset>
 		</div>
 		
+		<canvas id="spring"></canvas>
 		<script src="spring.js" type="text/javascript"></script>
 	</body>
 </html>
