@@ -46,7 +46,12 @@ window.onload = function () {
 	var BLOCK_HEIGHT = 150;
 	var SPRING_BUFFER_HEIGHT = 25;
 	var SPRING_EQUIL_Y = (HEIGHT - BLOCK_HEIGHT) / 2;
-	var GRAPH_PERIOD = 4000;
+	var GRAPH_PERIOD = 20000;
+	var TICK_HEIGHT = 15;
+	var PIXELS_PER_MS = WIDTH / GRAPH_PERIOD;
+	var LORENTZIAN_MAX = 13;
+	var LORENTZIAN_WIDTH = 200;
+	var LORENTZIAN_HEIGHT = 200;
 
 	var spring = new Renderer(document.getElementById('spring'), WIDTH, HEIGHT, function (n, height) {
 		this.drawImage(graph.canvas, 0, 0);
@@ -76,7 +81,7 @@ window.onload = function () {
 		this.rect(STRING_POS - BLOCK_WIDTH / 2, height, BLOCK_WIDTH, BLOCK_HEIGHT);
 		this.fill();
 		this.stroke();
-		this.globalAlpha = 1;	
+		this.globalAlpha = 1;
 		
 		this.beginPath();
 		this.fillStyle = 'black';
@@ -94,24 +99,29 @@ window.onload = function () {
 		this.lineTo(WIDTH, SPRING_EQUIL_Y + BLOCK_HEIGHT / 2);
 		this.stroke();
 		
+		// Draw a tick every second
+		for (var s = -PIXELS_PER_MS * (time % 1000); s < WIDTH; s += PIXELS_PER_MS * 1000) {
+			this.beginPath();
+			this.moveTo(s, SPRING_EQUIL_Y + BLOCK_HEIGHT / 2 + TICK_HEIGHT / 2);
+			this.lineTo(s, SPRING_EQUIL_Y + BLOCK_HEIGHT / 2 - TICK_HEIGHT / 2);
+			this.stroke();
+		}
+		
 		// Draw line.
 		this.strokeStyle = 'violet';
 		this.beginPath();
 		for (var i = 0; i < graph.points.length; i++)
-			this.lineTo((1 - (time - graph.points[i][0]) / GRAPH_PERIOD) * STRING_POS, graph.points[i][1]);
+			this.lineTo(STRING_POS - (time - graph.points[i][0]) * PIXELS_PER_MS, graph.points[i][1]);
 		this.stroke();
-		
 	});
 	graph.points = [];
 	graph.push = function (t, y) {
-		if (graph.points.push([t, y + BLOCK_HEIGHT / 2]) > 500)
+		graph.points.push([t, y + BLOCK_HEIGHT / 2]);
+		if (graph.points[0] && t1 - graph.points[0][0] > GRAPH_PERIOD)
 			graph.points.shift();
 	};
 	
 	// Lorentzian
-	var LORENTZIAN_MAX = 13;
-	var LORENTZIAN_WIDTH = 200;
-	var LORENTZIAN_HEIGHT = 200;
 	var lorentzian = new Renderer(document.getElementById('lorentzian'), LORENTZIAN_WIDTH, LORENTZIAN_HEIGHT, function (m, b, k, omegaf) {
 		var amplitudeVsOmega = function (omega) { return 1 / sqrt(sq(k / m - sq(omega)) + sq(omega * b / m)); };
 		
@@ -135,7 +145,7 @@ window.onload = function () {
 	
 	var y = 500; // pixels
 	var v = 0; // pixels / second
-	var t0 = 0;
+	var t0, t1; // The last time we numerically integrated
 	
 	// Modify our constants	
 	var zeta = control('zeta', id, id, id);
@@ -168,16 +178,26 @@ window.onload = function () {
 		output();
 	};
 	
-	requestAnimationFrame(function step(t) {
+	requestAnimationFrame(function step(time) {
+		
+		if (isNaN(t0))
+			t0 = t1 = time;
+		
+		var t = time - t0;
+		var dt = t - t1;
+		
 		// The user left the page for a while... pick up where they left off.
-		if (t - t0 > 1000)
-			t0 = t;
+		if (dt > 1000) {
+			t0 += dt;
+			t = t1;
+			dt = 0;
+		}
+		
 	
 		// Numerically integrate
-		if (!dragging) {
-			var dt = (t - t0) / 1000;
-			y += v * dt;
-			v += (-b * v - k * (y - SPRING_EQUIL_Y) - f(t)) * dt / m;
+		if (!dragging) {			
+			v += (-b * v - k * (y - SPRING_EQUIL_Y) - f(t)) * dt / 1000 / m;
+			y += v * dt / 1000;
 		}
 		
 		graph.push(t, y);
@@ -186,35 +206,37 @@ window.onload = function () {
 		// Spring constant is proportional to number of coils squared... why not?
 		spring.render(Math.round(Math.pow(k, 1 / 2)), y);
 		
-		t0 = t;
+		t1 = t;
 		requestAnimationFrame(step);
 	});
 	
 	// Dragging the block
 	var dragging = false;
-	var grabberY, lastY, lastT;
+	var grabberY, points;
 	spring.canvas.onmousedown = function (e) {
-		var mx = e.x - this.offsetLeft;
-		var my = e.y - this.offsetTop;
+		var mx = e.clientX - this.offsetLeft;
+		var my = e.clientY - this.offsetTop;
 		var bx = mx - STRING_POS;
 		if (Math.abs(bx) <= BLOCK_WIDTH / 2) {
-			dragging = true;			
-			lastY = y;
-			lastT = Date.now() / 1000;
-			grabberY = my - y;
+			dragging = true;
 			v = 0;
+			points = [[Date.now() / 1000, y]];
+			grabberY = my - y;
 		}
 	};
 	spring.canvas.onmousemove = function (e) {
 		if (dragging) {
-			var t = Date.now() / 1000;
-			var my = e.y - this.offsetTop;
+			var my = e.clientY - this.offsetTop;
 			y = my - grabberY;
-			v = 0.05 * (lastY - y) / (lastT - t);
-			lastT = t;
+			points.push([Date.now() / 1000, y]);
 		}
 	};
 	spring.canvas.onmouseup = function (e) {
 		dragging = false;
+		
+		// Differentiate points 
+		points = points.slice(-5);
+		var l = points.length - 1;
+		v = (points[l][1] - points[0][1]) / (points[l][0] - points[0][0]) || 0;
 	};
 };
