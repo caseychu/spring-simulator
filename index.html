@@ -3,13 +3,18 @@
 	<head>
 		<title>Spring Simulator</title>
 		<style type="text/css">
-			html {
+			html, body {
 				padding: 0;
 				margin: 0;
-				
+			}
+			body {
 				font-family: "times new roman", serif;
 				font-size: 17px;
 				overflow-y: scroll;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
 			}
 			#spring {
 				position: fixed;
@@ -141,7 +146,7 @@
 				<table>
 					
 					<tr id="zeta">
-						<td><input type="range" step="0.001" min="0" max="2" disabled /></td>
+						<td><input type="range" step="0.001" min="0" max="2" disabled="disabled" /></td>
 						<td>
 							<var>&zeta;</var> = <span></span>
 							<div class="explanation"><b>damping ratio</b>: 
@@ -155,7 +160,7 @@
 					</tr>
 					
 					<tr id="T">
-						<td><input type="range" step="0.001" min="0" max="8" disabled /></td>
+						<td><input type="range" step="0.001" min="0" max="8" disabled="disabled" /></td>
 						<td>
 							<var>T</var> = <span></span> s
 							<div class="explanation"><b>period of motion</b> (<var>T</var> = 2&pi;&#8202;/&#8202;<var>&omega;</var><sub>1</sub>)</div>
@@ -163,7 +168,7 @@
 					</tr>
 					
 					<tr id="omega0">
-						<td><input type="range" step="0.001" min="0" max="13" disabled /></Td>
+						<td><input type="range" step="0.001" min="0" max="13" disabled="disabled" /></Td>
 						<td>
 							<var>&omega;</var><sub>0</sub> = <span></span> s<sup>&#8722;1</sup>
 							<div class="explanation"><b>natural angular frequency</b> (for undamped, <var>b</var> = 0)</div>
@@ -171,7 +176,7 @@
 					</tr>
 					
 					<tr id="omega1">
-						<td><input type="range" step="0.001" min="0" max="13" disabled /></td>
+						<td><input type="range" step="0.001" min="0" max="13" disabled="disabled" /></td>
 						<td>
 							<var>&omega;</var><sub>1</sub> = <span></span> s<sup>&#8722;1</sup>
 							<div class="explanation"><b>actual angular frequency</b> (<var>&omega;</var><sub>0</sub> &approx; <var>&omega;</var><sub>1</sub> for <var>&zeta;</var> &ll; 1)</div>

@@ -26,7 +26,7 @@ function control(id, value, inv, callback) {
 
 	control.onchange = function () {
 		val.innerHTML = value(+this.value).toFixed(2);
-		callback(value(+this.value));
+		return callback(value(+this.value));
 	};
 	control.onchange();
 	
@@ -47,13 +47,15 @@ window.onload = function () {
 	var sin = Math.sin;
 	var cos = Math.cos;
 	var PI = Math.PI;
+	var disabled = function (x) { return false; };
 	
 	var WIDTH = window.innerWidth;
 	var HEIGHT = window.innerHeight;
-	var SPRING_WIDTH = 80;
-	var STRING_POS = WIDTH / 2;
 	var BLOCK_WIDTH = 220;
 	var BLOCK_HEIGHT = 150;
+	var BLOCK_Y = HEIGHT * 4 / 5;
+	var SPRING_WIDTH = 80;
+	var STRING_POS = (WIDTH - 400 - BLOCK_WIDTH) * 0.75;
 	var SPRING_BUFFER_HEIGHT = 25;
 	var SPRING_EQUIL_Y = (HEIGHT - BLOCK_HEIGHT) / 2;
 	var GRAPH_PERIOD = 20000;
@@ -158,15 +160,15 @@ window.onload = function () {
 		
 	});
 	
-	var y = 500; // pixels
+	var y = BLOCK_Y; // pixels
 	var v = 0; // pixels / second
 	var t0, t1; // The last time we numerically integrated
 	
 	// Modify our constants	
-	var zeta = control('zeta', id, id, id);
-	var omega0 = control('omega0', id, id, id);
-	var omega1 = control('omega1', id, id, id);
-	var T = control('T', id, id, id);
+	var zeta = control('zeta', id, id, disabled);
+	var omega0 = control('omega0', id, id, disabled);
+	var omega1 = control('omega1', id, id, disabled);
+	var T = control('T', id, id, disabled);
 	
 	function output() {
 		var o0 = omega0(sqrt(k / m));
