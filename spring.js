@@ -1,3 +1,9 @@
+window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function (fn) {
+	setTimeout(function () {
+		fn(Date.now());
+	}, 16);
+};
+
 function Renderer(canvas, width, height, render) {
 	this.canvas = canvas;
 	canvas.width = width;
