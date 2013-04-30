@@ -180,8 +180,10 @@ window.onload = function () {
 	
 	requestAnimationFrame(function step(time) {
 		
-		if (isNaN(t0))
-			t0 = t1 = time;
+		if (isNaN(t0)) {
+			t0 = time;
+			t1 = 0;
+		}
 		
 		var t = time - t0;
 		var dt = t - t1;
@@ -195,7 +197,7 @@ window.onload = function () {
 		
 	
 		// Numerically integrate
-		if (!dragging) {			
+		if (!dragging) {
 			v += (-b * v - k * (y - SPRING_EQUIL_Y) - f(t)) * dt / 1000 / m;
 			y += v * dt / 1000;
 		}
@@ -232,11 +234,13 @@ window.onload = function () {
 		}
 	};
 	spring.canvas.onmouseup = function (e) {
-		dragging = false;
-		
-		// Differentiate points 
-		points = points.slice(-5);
-		var l = points.length - 1;
-		v = (points[l][1] - points[0][1]) / (points[l][0] - points[0][0]) || 0;
+		if (dragging) {
+			dragging = false;
+			
+			// Differentiate points 
+			points = points.slice(-5);
+			var l = points.length - 1;
+			v = (points[l][1] - points[0][1]) / (points[l][0] - points[0][0]) || 0;
+		}
 	};
 };
