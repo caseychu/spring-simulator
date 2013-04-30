@@ -52,6 +52,7 @@
 			}
 			sup, sub {
 				font-size: 0.7em;
+				text-decoration: none !important;
 			}
 			.hanging {
 				display: inline-block;
@@ -68,6 +69,12 @@
 			}
 			#controls.f-oscillating #f .hanging {
 				vertical-align: top;
+			}
+			.sqrt {
+				border-top: 1px solid black;
+			}
+			.input[value="?"] {
+				opacity: 0.1
 			}
 		</style>
 		
@@ -118,8 +125,8 @@
 							</div>
 							<div class="explanation">
 								<b>forcing function</b>: external force on block <br />
-								<a href="#1" id="f-reset">reset <var>f</var>(<var>t</var>) = 0</a> | 
-								<a href="#1" id="f-oscillation">turn oscillation on</a>
+								<a href="#1" id="f-oscillation">turn oscillation on</a> |
+								<a href="#1" id="f-reset">reset <var>f</var>(<var>t</var>) = 0</a>
 							</div>
 						</td>
 					</tr>
@@ -133,7 +140,7 @@
 						<td>
 							<var>&omega;</var> = <span></span> s<sup>&#8722;1</sup>
 							<div class="explanation">
-								<b>angular frequency of forcing function</b>: <var>&omega;</var> = 0 for no oscillation
+								<b>angular frequency of forcing function</b>
 							</div>
 						</td>
 				</table>
@@ -148,7 +155,9 @@
 					<tr id="zeta">
 						<td><input type="range" step="0.001" min="0" max="2" disabled="disabled" /></td>
 						<td>
-							<var>&zeta;</var> = <span></span>
+							<var>&zeta;</var>
+								= <var>b</var>/2&radic;<var class="sqrt">mk</var>
+								= <span></span>
 							<div class="explanation"><b>damping ratio</b>: 
 								<div class="hanging">
 									system is underdamped if 0 &gt; <var>&zeta;</var> &gt; 1<br />
@@ -162,23 +171,23 @@
 					<tr id="T">
 						<td><input type="range" step="0.001" min="0" max="8" disabled="disabled" /></td>
 						<td>
-							<var>T</var> = <span></span> s
-							<div class="explanation"><b>period of motion</b> (<var>T</var> = 2&pi;&#8202;/&#8202;<var>&omega;</var><sub>1</sub>)</div>
+							<var>T</var> = 2&pi;&#8202;/&#8202;<var>&omega;</var><sub>1</sub> = <span></span> s
+							<div class="explanation"><b>period of motion</b>
 						</td>
 					</tr>
 					
 					<tr id="omega0">
 						<td><input type="range" step="0.001" min="0" max="13" disabled="disabled" /></Td>
 						<td>
-							<var>&omega;</var><sub>0</sub> = <span></span> s<sup>&#8722;1</sup>
-							<div class="explanation"><b>natural angular frequency</b> (for undamped, <var>b</var> = 0)</div>
+							<var>&omega;</var><sub>0</sub> = &radic;<var class="sqrt">k/m</var> = <span></span> s<sup>&#8722;1</sup>
+							<div class="explanation"><b>natural angular frequency</b>: undamped frequency</div>
 						</td>
 					</tr>
 					
 					<tr id="omega1">
 						<td><input type="range" step="0.001" min="0" max="13" disabled="disabled" /></td>
 						<td>
-							<var>&omega;</var><sub>1</sub> = <span></span> s<sup>&#8722;1</sup>
+							<var>&omega;</var><sub>1</sub> = <var>&omega;</var><sub>0</sub>&radic;<var class="sqrt" style="font-style: normal">1 - 2<var>&zeta;</var><sup>2</sup></var> = <span></span> s<sup>&#8722;1</sup>
 							<div class="explanation"><b>actual angular frequency</b> (<var>&omega;</var><sub>0</sub> &approx; <var>&omega;</var><sub>1</sub> for <var>&zeta;</var> &ll; 1)</div>
 						</td>
 					</tr>
