@@ -1,2 +1,2 @@
-harmonic-oscillator-simulator
+spring-simulator
 =============================
