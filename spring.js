@@ -22,7 +22,7 @@ function Renderer(canvas, width, height, render) {
 
 function control(id, value, inv, callback) {
 	var control = document.getElementById(id).querySelector('input');
-	var val = document.getElementById(id).querySelector('span');
+	var val = document.getElementById(id).querySelector('output');
 
 	control.onchange = function () {
 		val.innerHTML = value(+this.value).toFixed(2);
