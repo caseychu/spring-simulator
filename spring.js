@@ -277,4 +277,9 @@ window.onload = function () {
 			v = (points[l][1] - points[0][1]) / (points[l][0] - points[0][0]) || 0;
 		}
 	};
+	
+	// Scroll wheel support.
+	document.body.onmousewheel = function (e) {
+		v += -e.wheelDelta * 60 / 120;
+	};
 };
