@@ -247,6 +247,12 @@
 				var PI = Math.PI;
 				var disabled = function (x) { return false; };
 				
+				// Strange Chrome bug -- happens when you double-click the HTML file directly
+				if (window.innerWidth == 0) {
+					window.location.replace(window.location.href);
+					return;
+				}
+				
 				var WIDTH = window.innerWidth;
 				var HEIGHT = window.innerHeight;
 				var BLOCK_WIDTH = 220;
@@ -416,7 +422,7 @@
 				
 				requestAnimationFrame(function step(time) {
 					
-					
+					// Initial values
 					if (isNaN(t0)) {
 						t0 = time;
 						t1 = 0;
