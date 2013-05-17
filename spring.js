@@ -81,16 +81,20 @@ window.onload = function () {
 		this.fill();
 		
 		// omega = 2 pi / "period"
-		height -= SPRING_BUFFER_HEIGHT * 2;
-		var omega = 2 * PI / (height / n);
-		this.beginPath();
-		this.moveTo(STRING_POS, 0);
-		for (var t = 0; t < height && t < 2 * HEIGHT; t += 0.02)
-			this.lineTo(STRING_POS + SPRING_WIDTH * sin(omega * t), t + SPRING_BUFFER_HEIGHT);
-			
-		height += SPRING_BUFFER_HEIGHT * 2;
-		this.lineTo(STRING_POS, height);
-		this.stroke();
+		if (height > 0) {
+			var coilHeight = height - SPRING_BUFFER_HEIGHT * 2;
+			var omega = 2 * PI / (coilHeight / n);
+			var dt = 0.2;
+			this.beginPath();
+			this.moveTo(STRING_POS, 0);
+			this.lineTo(STRING_POS, SPRING_BUFFER_HEIGHT);
+			for (var t = dt; t < coilHeight && t < 2 * HEIGHT; t += dt)
+				this.quadraticCurveTo(STRING_POS + SPRING_WIDTH * sin(omega * (t - dt / 2)), t - dt / 2 + SPRING_BUFFER_HEIGHT, 
+									  STRING_POS + SPRING_WIDTH * sin(omega * t), t + SPRING_BUFFER_HEIGHT);
+			this.lineTo(STRING_POS, height - SPRING_BUFFER_HEIGHT);
+			this.lineTo(STRING_POS, height);
+			this.stroke();
+		}
 		
 		// Draw the block
 		this.globalAlpha = 0.8;
@@ -187,7 +191,7 @@ window.onload = function () {
 	
 	// Forcing
 	var f = function (t) {
-		return ff(f0 * cos(omegaf * t / 1000));
+		return f0 * cos(omegaf * t / 1000);
 	}; // mass * pixels / second^2
 	document.getElementById('f-reset').onclick = function () {
 		document.getElementById('f-oscillation').innerHTML = 'turn oscillation on';
@@ -215,6 +219,7 @@ window.onload = function () {
 	
 	requestAnimationFrame(function step(time) {
 		
+		
 		if (isNaN(t0)) {
 			t0 = time;
 			t1 = 0;
@@ -230,12 +235,21 @@ window.onload = function () {
 			dt = 0;
 		}
 	
-		// Numerically integrate
+		// Numerically integrate by delta t = 1/10 * the time difference
 		if (!dragging) {
-			v += (-b * v - k * (y - SPRING_EQUIL_Y) - f(t)) * dt / 1000 / m;
-			y += v * dt / 1000;
+			var div = 10;
+			var ddt = dt / div;
+			for (var i = 0; i < div; i++) {
+				v += (-b * v - k * (y - SPRING_EQUIL_Y) - f(t + (div - i) * ddt)) * ddt / 1000 / m;
+				y += v * ddt / 1000;
+			}
 		}
 		
+		ff(f(t));
+		
+		// Pretty fade in.
+		if (exp(-t / 8000) > 0.5)
+			graph.context.globalAlpha = 1 - 2 * Math.max(exp(-t / 8000) - 0.5, 0);
 		graph.push(t, y);
 		graph.render(t);
 		
